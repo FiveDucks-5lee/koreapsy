@@ -389,6 +389,62 @@ body {
   line-height: 1.75;
 }
 
+/* ─── ALL TYPES ─── */
+#all-types {
+  min-height: 100vh;
+  flex-direction: column;
+  align-items: center;
+  padding: 72px 24px 60px;
+}
+
+.type-browser { max-width: 660px; width: 100%; }
+
+.type-selector {
+  display: flex; flex-wrap: wrap; gap: 8px;
+  margin-bottom: 28px; justify-content: center;
+}
+
+.type-pill-btn {
+  background: var(--paper);
+  border: 1.5px solid var(--dust);
+  border-radius: 50px;
+  padding: 8px 16px;
+  font-family: 'Noto Sans KR', sans-serif;
+  font-size: 12px; font-weight: 600;
+  cursor: pointer;
+  transition: all .18s;
+  display: flex; align-items: center; gap: 6px;
+  color: var(--body);
+}
+.type-pill-btn:hover { border-color: var(--violet); background: #f4f1fa; }
+.type-pill-btn.active { background: var(--ink); border-color: var(--ink); color: #fff; }
+
+.btn-all-types {
+  display: block; margin: 24px auto 12px;
+  background: var(--paper);
+  border: 1.5px solid var(--dust);
+  color: var(--body); border-radius: 50px;
+  padding: 13px 44px;
+  font-family: 'Noto Sans KR', sans-serif;
+  font-size: 13.5px; font-weight: 600;
+  cursor: pointer;
+  transition: background .2s, border-color .2s;
+}
+.btn-all-types:hover { border-color: var(--violet); background: #f4f1fa; }
+
+.btn-back {
+  display: block; margin: 32px auto 0;
+  background: transparent;
+  border: 1.5px solid var(--dust);
+  color: var(--muted); border-radius: 50px;
+  padding: 11px 32px;
+  font-family: 'Noto Sans KR', sans-serif;
+  font-size: 13px; font-weight: 600;
+  cursor: pointer;
+  transition: all .2s;
+}
+.btn-back:hover { border-color: var(--ink); color: var(--ink); }
+
 @media (max-width: 500px) {
   .traits-wrap { grid-template-columns: 1fr; }
   .scholar-quote { padding: 26px 24px 22px; }
@@ -451,6 +507,16 @@ body {
 <!-- ══════════ RESULT ══════════ -->
 <div id="result" class="screen">
   <div class="res-card" id="res-card"></div>
+</div>
+
+<!-- ══════════ ALL TYPES ══════════ -->
+<div id="all-types" class="screen">
+  <div class="type-browser">
+    <p class="res-eyebrow" style="text-align:center;margin-bottom:8px">모든 유형 탐색</p>
+    <div class="type-selector" id="type-selector"></div>
+    <div id="type-detail"></div>
+    <button class="btn-back" onclick="show('result')">← 내 결과로 돌아가기</button>
+  </div>
 </div>
 
 <script>
@@ -934,6 +1000,7 @@ function buildResult() {
       </div>
     </div>
 
+    <button class="btn-all-types" onclick="showAllTypes('${top}')">다른 유형도 보기</button>
     <button class="btn-retry" onclick="resetAll()">처음부터 다시하기</button>
     <p class="footnote">
       이 테스트는 M. Klein, D. W. Winnicott, W. R. D. Fairbairn,<br>
@@ -950,6 +1017,67 @@ function resetAll() {
   sc = {A:0,B:0,C:0,D:0,E:0,F:0,G:0,H:0};
   document.getElementById('prog-bar').style.width = '0%';
   show('intro');
+}
+
+function showAllTypes(startKey) {
+  const sel = document.getElementById('type-selector');
+  sel.innerHTML = Object.entries(TYPES).map(([k, t]) =>
+    `<button class="type-pill-btn" onclick="selectType('${k}')" id="pill-${k}">
+      <span>${t.symbol}</span><span>${t.badge}</span>
+    </button>`
+  ).join('');
+  selectType(startKey);
+  show('all-types');
+}
+
+function selectType(key) {
+  document.querySelectorAll('.type-pill-btn').forEach(b => b.classList.remove('active'));
+  const pill = document.getElementById('pill-' + key);
+  if (pill) pill.classList.add('active');
+
+  const t = TYPES[key];
+  document.getElementById('type-detail').innerHTML = `
+    <div style="animation:riseIn .3s ease both">
+      <div class="res-header">
+        <span class="res-symbol">${t.symbol}</span>
+        <span class="res-badge" style="background:${t.bgC};color:${t.txtC}">${t.badge}</span>
+        <h2 class="res-title">${t.title}</h2>
+        <p class="res-subtitle">${t.subtitle}</p>
+      </div>
+      <div class="scholar-quote">
+        <p class="sq-text">${t.quote}</p>
+        <p class="sq-attr">${t.quoteAttr}</p>
+      </div>
+      <div class="res-block">
+        <p class="block-label">연애 방식</p>
+        <p class="block-body">${t.desc}</p>
+      </div>
+      <div class="res-block">
+        <p class="block-label">대상관계이론으로 보면</p>
+        <div class="theory-inset">
+          <p class="ti-label">📚 ${t.scholar}의 시각</p>
+          <p>${t.theory}</p>
+        </div>
+      </div>
+      <div class="res-block">
+        <p class="block-label">이 유형의 특징</p>
+        <div class="traits-wrap">
+          ${t.traits.map(tr => `<div class="trait"><div class="trait-dot"></div><span>${tr}</span></div>`).join('')}
+        </div>
+      </div>
+      <div class="growth-box">
+        <p class="gb-label">🌱 성장 포인트</p>
+        <p class="gb-text">${t.growth}</p>
+      </div>
+      <div class="res-block" style="margin-top:14px">
+        <p class="block-label">잘 맞는 유형</p>
+        <div class="compat-row">
+          ${t.compat.map(c => `<span class="compat-tag">${c}</span>`).join('')}
+        </div>
+      </div>
+    </div>
+  `;
+  window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 </script>
 </body>
